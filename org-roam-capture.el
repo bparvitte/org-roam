@@ -562,6 +562,51 @@ Return the ID of the location."
            ;; workers.
            (org-today)))))
        (setq p (point)))
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;; insertion
+            (`(file+datetree ,path ,tree-type)
+       (setq path (org-roam-capture--target-truepath path))
+       (require 'org-datetree)
+       (widen)
+       (set-buffer (org-capture-target-buffer path))
+       (unless (file-exists-p path)
+         (org-roam-capture--put :new-file path))
+       (funcall
+        (pcase tree-type
+          (`week #'org-datetree-find-iso-week-create)
+          (`month #'org-datetree-find-month-create)
+          (_ #'org-datetree-find-date-create))
+        (calendar-gregorian-from-absolute
+         (cond
+          (org-overriding-default-time
+           ;; Use the overriding default time.
+           (time-to-days org-overriding-default-time))
+          ((org-capture-get :default-time)
+           (time-to-days (org-capture-get :default-time)))
+          ((org-capture-get :time-prompt)
+           ;; Prompt for date.  Bind `org-end-time-was-given' so
+           ;; that `org-read-date-analyze' handles the time range
+           ;; case and returns `prompt-time' with the start value.
+           (let* ((org-time-was-given nil)
+                  (org-end-time-was-given nil)
+                  (prompt-time (org-read-date
+                                nil t nil "Date for tree entry:")))
+             (org-capture-put
+              :default-time
+              (if (or org-time-was-given
+                      (= (time-to-days prompt-time) (org-today)))
+                  prompt-time
+                ;; Use 00:00 when no time is given for another
+                ;; date than today?
+                (apply #'encode-time 0 0
+                       org-extend-today-until
+                       (cl-cdddr (decode-time prompt-time)))))
+             (time-to-days prompt-time)))
+          (t
+           ;; Current date, possibly corrected for late night
+           ;; workers.
+           (org-today)))))
+       (setq p (point)))
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;; end insertion
       (`(node ,title-or-id)
        ;; first try to get ID, then try to get title/alias
        (let ((node (or (org-roam-node-from-id title-or-id)
