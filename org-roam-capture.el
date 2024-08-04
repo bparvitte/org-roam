@@ -563,7 +563,7 @@ Return the ID of the location."
            (org-today)))))
        (setq p (point)))
       ;;;;;;;;;;;;;;;;;;;;;;;;;;; insertion
-            (`(file+datetree ,path ,tree-type)
+            (`(file+head+datetree ,path ,tree-type)
        (setq path (org-roam-capture--target-truepath path))
        (require 'org-datetree)
        (widen)
