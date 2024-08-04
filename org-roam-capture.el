@@ -569,7 +569,8 @@ Return the ID of the location."
        (widen)
        (set-buffer (org-capture-target-buffer path))
        (unless (file-exists-p path)
-         (org-roam-capture--put :new-file path))
+         (org-roam-capture--put :new-file path)
+         (insert (org-roam-capture--fill-template head 'ensure-newline)))
        (funcall
         (pcase tree-type
           (`week #'org-datetree-find-iso-week-create)
